@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI File Sorter</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <div class="logo">
+                    <span class="logo-icon">🗂️</span>
+                    <h1>AI File Sorter</h1>
+                </div>
+                <p class="tagline">Intelligent File Organization</p>
+            </div>
+            <div class="header-right">
+                <button id="btn-settings" class="btn-icon-only" title="Settings">⚙️</button>
+            </div>
+        </header>
+
+        <!-- Main Layout: 2 columns -->
+        <div class="main-layout">
+            <!-- Left Column: Controls & Files -->
+            <div class="main-content">
+                <!-- Controls -->
+                <section class="controls glass-card">
+                    <div class="directory-input">
+                        <label for="directory">📁 Target Directory</label>
+                        <div class="input-group">
+                            <input type="text" id="directory"
+                                placeholder="Enter directory path or drag & drop a folder...">
+                            <button id="btn-browse" class="btn btn-secondary" title="Browse for folder">
+                                <span class="btn-icon">📂</span> Browse
+                            </button>
+                            <button id="btn-scan" class="btn btn-primary">
+                                <span class="btn-icon">🔍</span> Scan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Organization Options with Tooltips -->
+                    <div class="options-inline">
+                        <label class="option-chip"
+                            data-tooltip="AI will prioritize placing files into your existing folders before creating new ones">
+                            <input type="checkbox" id="opt-use-folders" checked>
+                            <span>🧠 Use Existing Folders</span>
+                        </label>
+                        <label class="option-chip"
+                            data-tooltip="AI will suggest cleaner, more descriptive names for messy filenames like IMG_001.jpg">
+                            <input type="checkbox" id="opt-rename">
+                            <span>✏️ Smart Rename</span>
+                        </label>
+                        <label class="option-chip"
+                            data-tooltip="Scan all files in subdirectories, not just the root folder">
+                            <input type="checkbox" id="opt-recursive">
+                            <span>📂 Include Subfolders</span>
+                        </label>
+                        <label class="option-chip"
+                            data-tooltip="Treat folders as items that can be organized into parent folders">
+                            <input type="checkbox" id="opt-include-folders">
+                            <span>📁 Organize Folders</span>
+                        </label>
+                        <label class="option-chip"
+                            data-tooltip="Only show and organize folders, ignoring individual files">
+                            <input type="checkbox" id="opt-folders-only">
+                            <span>📁 Folders Only</span>
+                        </label>
+                    </div>
+
+                    <!-- Custom Instructions -->
+                    <div class="instruction-input">
+                        <label for="custom-instruction">
+                            💬 Instructions for AI
+                            <span class="label-hint">(optional)</span>
+                        </label>
+                        <textarea id="custom-instruction" rows="2"
+                            placeholder="e.g., 'Put all files with Deductions in their name into the Deductions folder' or 'Group by project name'"></textarea>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button id="btn-suggest" class="btn btn-secondary" disabled>
+                            <span class="btn-icon">🤖</span> Get AI Suggestions
+                        </button>
+                        <button id="btn-preview" class="btn btn-info" disabled>
+                            <span class="btn-icon">👁️</span> Preview
+                        </button>
+                        <button id="btn-organize" class="btn btn-success" disabled>
+                            <span class="btn-icon">✨</span> Organize
+                        </button>
+                        <button id="btn-undo" class="btn btn-warning">
+                            <span class="btn-icon">↩️</span> Undo
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Status -->
+                <div id="status-bar" class="status-bar hidden">
+                    <span class="status-icon">⏳</span>
+                    <span class="status-text">Ready</span>
+                </div>
+
+                <!-- Filter/Search Toolbar -->
+                <section class="toolbar glass-card">
+                    <div class="search-box">
+                        <span class="search-icon">🔍</span>
+                        <input type="text" id="search-input" placeholder="Search files...">
+                    </div>
+                    <div class="filter-controls">
+                        <select id="filter-type">
+                            <option value="all">All Types</option>
+                            <option value="files">Files Only</option>
+                            <option value="folders">Folders Only</option>
+                        </select>
+                        <select id="sort-by">
+                            <option value="name">Sort by Name</option>
+                            <option value="size">Sort by Size</option>
+                            <option value="category">Sort by Category</option>
+                            <option value="type">Sort by Type</option>
+                        </select>
+                        <button id="btn-sort-dir" class="btn-icon-only" title="Toggle sort direction">↑</button>
+                    </div>
+                    <div class="table-stats">
+                        <span id="file-count">0 files</span>
+                        <span class="divider">|</span>
+                        <span id="selected-count">0 selected</span>
+                        <span class="divider">|</span>
+                        <span id="folder-count">0 folders</span>
+                    </div>
+                </section>
+
+                <!-- File Table -->
+                <section class="file-table-container glass-card">
+                    <div class="table-wrapper">
+                        <table id="file-table">
+                            <thead>
+                                <tr>
+                                    <th class="col-checkbox">
+                                        <input type="checkbox" id="select-all" title="Select All">
+                                    </th>
+                                    <th class="col-type">Type</th>
+                                    <th class="col-name">Name</th>
+                                    <th class="col-size">Size</th>
+                                    <th class="col-destination">Destination</th>
+                                    <th class="col-action">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="file-list">
+                                <tr class="empty-state">
+                                    <td colspan="6">
+                                        <div class="empty-message">
+                                            <span class="empty-icon">📂</span>
+                                            <p>No files scanned yet</p>
+                                            <p class="empty-hint">Enter a directory and click "Scan" to get started</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+
+            <!-- Right Column: AI Chat & Preview -->
+            <div class="side-panel">
+                <!-- AI Response Panel -->
+                <section class="ai-panel glass-card">
+                    <div class="panel-header">
+                        <h3>🤖 AI Assistant</h3>
+                        <div class="model-badge" id="current-model">No API Key</div>
+                        <button id="btn-clear-chat" class="btn-icon-only" title="Clear chat">🗑️</button>
+                    </div>
+                    <div id="ai-chat" class="ai-chat">
+                        <div class="ai-message system">
+                            <p>👋 Hi! I'm your AI file sorting assistant. I can:</p>
+                            <ul>
+                                <li>Analyze and suggest how to organize your files</li>
+                                <li>Suggest better names for images based on content</li>
+                                <li>Answer questions about your file organization</li>
+                            </ul>
+                            <p>Scan a directory to get started!</p>
+                        </div>
+                    </div>
+                    <div class="chat-input-container">
+                        <input type="text" id="chat-input" placeholder="Ask AI about your files...">
+                        <button id="btn-send-chat" class="btn btn-primary">
+                            <span>Send</span>
+                        </button>
+                    </div>
+                </section>
+
+                <!-- Preview Panel -->
+                <section class="preview-panel glass-card">
+                    <div class="panel-header">
+                        <h3>📁 Organization Preview</h3>
+                    </div>
+                    <div id="preview-tree" class="preview-tree">
+                        <p class="preview-hint">Click "Preview" to see where files will be moved</p>
+                    </div>
+                </section>
+            </div>
+        </div>
+
+        <!-- Results Modal -->
+        <div id="results-modal" class="modal hidden">
+            <div class="modal-content glass-card">
+                <div class="modal-header">
+                    <h2 id="modal-title">Results</h2>
+                    <button class="modal-close" id="modal-close">&times;</button>
+                </div>
+                <div class="modal-body" id="modal-body">
+                    <!-- Dynamic content -->
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" id="modal-ok">OK</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Modal -->
+        <div id="settings-modal" class="modal hidden">
+            <div class="modal-content glass-card settings-modal">
+                <div class="modal-header">
+                    <h2>⚙️ AI Settings</h2>
+                    <button class="modal-close" id="settings-close">&times;</button>
+                </div>
+                <div class="modal-body">
+                    <div class="settings-group">
+                        <label for="provider-select">
+                            AI Provider
+                            <span class="settings-tooltip"
+                                data-tooltip="Choose which AI service to use for file organization suggestions">ⓘ</span>
+                        </label>
+                        <select id="provider-select">
+                            <option value="gemini">Google Gemini</option>
+                            <option value="openai">OpenAI</option>
+                            <option value="openrouter">OpenRouter</option>
+                            <option value="xai">xAI (Grok)</option>
+                            <option value="custom">Custom (OpenAI-Compatible)</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-group">
+                        <label for="model-select">
+                            Model
+                            <span class="settings-tooltip"
+                                data-tooltip="Select the specific AI model. Models with 👁️ support image analysis for smarter renaming">ⓘ</span>
+                        </label>
+                        <select id="model-select">
+                            <option value="">Loading models...</option>
+                        </select>
+                    </div>
+
+                    <div class="settings-group">
+                        <label for="api-key-input">
+                            API Key
+                            <span class="settings-tooltip"
+                                data-tooltip="Your API key for the selected provider. Get one from their developer portal">ⓘ</span>
+                        </label>
+                        <div class="api-key-input">
+                            <input type="password" id="api-key-input" placeholder="Enter your API key...">
+                            <button id="btn-toggle-key" class="btn-icon-only" title="Show/Hide">👁️</button>
+                        </div>
+                        <p class="settings-hint">Current: <span id="current-key-status">Not set</span></p>
+                    </div>
+
+                    <div class="settings-group custom-url-group hidden" id="custom-url-group">
+                        <label for="custom-url-input">
+                            Custom Base URL
+                            <span class="settings-tooltip"
+                                data-tooltip="The base URL for your OpenAI-compatible API endpoint">ⓘ</span>
+                        </label>
+                        <input type="text" id="custom-url-input" placeholder="https://api.your-provider.com/v1">
+                    </div>
+
+                    <div class="settings-actions">
+                        <button id="btn-test-connection" class="btn btn-secondary">
+                            <span class="btn-icon">🔌</span> Test Connection
+                        </button>
+                        <span id="connection-status"></span>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" id="settings-cancel">Cancel</button>
+                    <button class="btn btn-primary" id="settings-save">Save Settings</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+
+    <!-- Hidden Datalist for Folder Suggestions -->
+    <datalist id="folder-suggestions"></datalist>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+</body>
+
+</html>
