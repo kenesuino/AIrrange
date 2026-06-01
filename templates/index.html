@@ -17,13 +17,18 @@
         <header class="header">
             <div class="header-left">
                 <div class="logo">
-                    <span class="logo-icon">🗂️</span>
+                    <span class="logo-icon">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9h18"/><path d="M9 4v5"/></svg>
+                    </span>
                     <h1>AI File Sorter</h1>
                 </div>
                 <p class="tagline">Intelligent File Organization</p>
             </div>
             <div class="header-right">
-                <button id="btn-settings" class="btn-icon-only" title="Settings">⚙️</button>
+                <button id="btn-theme" class="btn-icon-only" title="Toggle light/dark theme"></button>
+                <button id="btn-settings" class="btn-icon-only" title="Settings">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                </button>
             </div>
         </header>
 
@@ -34,15 +39,18 @@
                 <!-- Controls -->
                 <section class="controls glass-card">
                     <div class="directory-input">
-                        <label for="directory">📁 Target Directory</label>
+                        <label for="directory">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+                            Target Directory
+                        </label>
                         <div class="input-group">
                             <input type="text" id="directory"
                                 placeholder="Enter directory path or drag & drop a folder...">
                             <button id="btn-browse" class="btn btn-secondary" title="Browse for folder">
-                                <span class="btn-icon">📂</span> Browse
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Browse
                             </button>
                             <button id="btn-scan" class="btn btn-primary">
-                                <span class="btn-icon">🔍</span> Scan
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg> Scan
                             </button>
                         </div>
                     </div>
@@ -52,34 +60,34 @@
                         <label class="option-chip"
                             data-tooltip="AI will prioritize placing files into your existing folders before creating new ones">
                             <input type="checkbox" id="opt-use-folders" checked>
-                            <span>🧠 Use Existing Folders</span>
+                            <span>Use Existing Folders</span>
                         </label>
                         <label class="option-chip"
                             data-tooltip="AI will suggest cleaner, more descriptive names for messy filenames like IMG_001.jpg">
                             <input type="checkbox" id="opt-rename">
-                            <span>✏️ Smart Rename</span>
+                            <span>Smart Rename</span>
                         </label>
                         <label class="option-chip"
                             data-tooltip="Scan all files in subdirectories, not just the root folder">
                             <input type="checkbox" id="opt-recursive">
-                            <span>📂 Include Subfolders</span>
+                            <span>Include Subfolders</span>
                         </label>
                         <label class="option-chip"
                             data-tooltip="Treat folders as items that can be organized into parent folders">
                             <input type="checkbox" id="opt-include-folders">
-                            <span>📁 Organize Folders</span>
+                            <span>Organize Folders</span>
                         </label>
                         <label class="option-chip"
                             data-tooltip="Only show and organize folders, ignoring individual files">
                             <input type="checkbox" id="opt-folders-only">
-                            <span>📁 Folders Only</span>
+                            <span>Folders Only</span>
                         </label>
                     </div>
 
                     <!-- Custom Instructions -->
                     <div class="instruction-input">
                         <label for="custom-instruction">
-                            💬 Instructions for AI
+                            Instructions for AI
                             <span class="label-hint">(optional)</span>
                         </label>
                         <textarea id="custom-instruction" rows="2"
@@ -88,16 +96,16 @@
 
                     <div class="action-buttons">
                         <button id="btn-suggest" class="btn btn-secondary" disabled>
-                            <span class="btn-icon">🤖</span> Get AI Suggestions
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3l1.6 4.4L18 9l-4.4 1.6L12 15l-1.6-4.4L6 9l4.4-1.6z"/><path d="M19 14l.8 2.2L22 17l-2.2.8L19 20l-.8-2.2L16 17l2.2-.8z"/></svg> Get AI Suggestions
                         </button>
                         <button id="btn-preview" class="btn btn-info" disabled>
-                            <span class="btn-icon">👁️</span> Preview
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg> Preview
                         </button>
                         <button id="btn-organize" class="btn btn-success" disabled>
-                            <span class="btn-icon">✨</span> Organize
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Organize
                         </button>
                         <button id="btn-undo" class="btn btn-warning">
-                            <span class="btn-icon">↩️</span> Undo
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7v6h6"/><path d="M3 13a9 9 0 1 0 3-7.7L3 8"/></svg> Undo Last
                         </button>
                     </div>
                 </section>
@@ -111,7 +119,9 @@
                 <!-- Filter/Search Toolbar -->
                 <section class="toolbar glass-card">
                     <div class="search-box">
-                        <span class="search-icon">🔍</span>
+                        <span class="search-icon">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+                        </span>
                         <input type="text" id="search-input" placeholder="Search files...">
                     </div>
                     <div class="filter-controls">
@@ -174,13 +184,18 @@
                 <!-- AI Response Panel -->
                 <section class="ai-panel glass-card">
                     <div class="panel-header">
-                        <h3>🤖 AI Assistant</h3>
+                        <h3>
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="8" width="16" height="11" rx="2"/><path d="M12 8V4"/><circle cx="12" cy="3" r="1"/><path d="M9 13h.01M15 13h.01"/><path d="M9 16h6"/></svg>
+                            AI Assistant
+                        </h3>
                         <div class="model-badge" id="current-model">No API Key</div>
-                        <button id="btn-clear-chat" class="btn-icon-only" title="Clear chat">🗑️</button>
+                        <button id="btn-clear-chat" class="btn-icon-only" title="Clear chat">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+                        </button>
                     </div>
                     <div id="ai-chat" class="ai-chat">
                         <div class="ai-message system">
-                            <p>👋 Hi! I'm your AI file sorting assistant. I can:</p>
+                            <p>Hi! I'm your AI file sorting assistant. I can:</p>
                             <ul>
                                 <li>Analyze and suggest how to organize your files</li>
                                 <li>Suggest better names for images based on content</li>
@@ -192,18 +207,36 @@
                     <div class="chat-input-container">
                         <input type="text" id="chat-input" placeholder="Ask AI about your files...">
                         <button id="btn-send-chat" class="btn btn-primary">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M22 2L11 13"/><path d="M22 2l-7 20-4-9-9-4z"/></svg>
                             <span>Send</span>
                         </button>
                     </div>
                 </section>
 
-                <!-- Preview Panel -->
-                <section class="preview-panel glass-card">
-                    <div class="panel-header">
-                        <h3>📁 Organization Preview</h3>
+                <!-- Tabbed Panel: Preview / History -->
+                <section class="tabbed-panel glass-card">
+                    <div class="panel-header panel-tabs">
+                        <button class="panel-tab active" data-tab="preview">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 2l9 5-9 5-9-5z"/><path d="M3 12l9 5 9-5"/><path d="M3 17l9 5 9-5"/></svg>
+                            Preview
+                        </button>
+                        <button class="panel-tab" data-tab="history">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+                            History
+                        </button>
+                        <button id="btn-refresh-history" class="btn-icon-only tab-action hidden" title="Refresh history">
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v5h5"/><path d="M3.05 13A9 9 0 1 0 6 5.3L3 8"/><path d="M12 7v5l4 2"/></svg>
+                        </button>
                     </div>
-                    <div id="preview-tree" class="preview-tree">
-                        <p class="preview-hint">Click "Preview" to see where files will be moved</p>
+                    <div id="tab-preview" class="tab-content active">
+                        <div id="preview-tree" class="preview-tree">
+                            <p class="preview-hint">Click "Preview" to see where files will be moved</p>
+                        </div>
+                    </div>
+                    <div id="tab-history" class="tab-content">
+                        <div id="history-list" class="history-list">
+                            <p class="preview-hint">No organization history yet</p>
+                        </div>
                     </div>
                 </section>
             </div>
@@ -214,7 +247,9 @@
             <div class="modal-content glass-card">
                 <div class="modal-header">
                     <h2 id="modal-title">Results</h2>
-                    <button class="modal-close" id="modal-close">&times;</button>
+                    <button class="modal-close" id="modal-close" title="Close">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
                 </div>
                 <div class="modal-body" id="modal-body">
                     <!-- Dynamic content -->
@@ -229,8 +264,13 @@
         <div id="settings-modal" class="modal hidden">
             <div class="modal-content glass-card settings-modal">
                 <div class="modal-header">
-                    <h2>⚙️ AI Settings</h2>
-                    <button class="modal-close" id="settings-close">&times;</button>
+                    <h2>
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+                        AI Settings
+                    </h2>
+                    <button class="modal-close" id="settings-close" title="Close">
+                        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                    </button>
                 </div>
                 <div class="modal-body">
                     <div class="settings-group">
@@ -267,7 +307,9 @@
                         </label>
                         <div class="api-key-input">
                             <input type="password" id="api-key-input" placeholder="Enter your API key...">
-                            <button id="btn-toggle-key" class="btn-icon-only" title="Show/Hide">👁️</button>
+                            <button id="btn-toggle-key" class="btn-icon-only" title="Show/Hide">
+                                <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>
+                            </button>
                         </div>
                         <p class="settings-hint">Current: <span id="current-key-status">Not set</span></p>
                     </div>
@@ -283,7 +325,7 @@
 
                     <div class="settings-actions">
                         <button id="btn-test-connection" class="btn btn-secondary">
-                            <span class="btn-icon">🔌</span> Test Connection
+                            <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 2v6M15 2v6"/><path d="M7 8h10v3a5 5 0 0 1-10 0z"/><path d="M12 16v6"/></svg> Test Connection
                         </button>
                         <span id="connection-status"></span>
                     </div>
@@ -298,10 +340,31 @@
     </div>
     </div>
 
+    <!-- Confirm Dialog -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-content glass-card confirm-modal">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm</h2>
+                <button class="modal-close" id="confirm-close" title="Close">
+                    <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6L6 18M6 6l12 12"/></svg>
+                </button>
+            </div>
+            <div class="modal-body" id="confirm-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+                <button class="btn btn-primary" id="confirm-ok">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
     <!-- Hidden Datalist for Folder Suggestions -->
     <datalist id="folder-suggestions"></datalist>
     </div>
 
+    <script src="{{ url_for('static', filename='js/icons.js') }}"></script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 

@@ -239,49 +239,102 @@ class FileOrganizer:
                 file["category"] = "Misc"
             return files
     
+    # Log schema (current format). Older logs used only the last three columns.
+    LOG_HEADER = ["BatchId", "Date", "Source", "Destination", "Status"]
+
+    def _read_log(self) -> list[dict]:
+        """Read the organization log, normalizing legacy (3-column) rows.
+
+        Returns a list of dicts with keys: BatchId, Date, Source, Destination,
+        Status. Legacy rows (without BatchId/Status) are assigned to a single
+        'legacy' batch with Status 'moved'.
+        """
+        if not self.log_file or not self.log_file.exists():
+            return []
+
+        with open(self.log_file, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            fieldnames = reader.fieldnames or []
+            is_legacy = "BatchId" not in fieldnames
+
+            rows = []
+            for row in reader:
+                if is_legacy:
+                    rows.append({
+                        "BatchId": "legacy",
+                        "Date": row.get("Date", ""),
+                        "Source": row.get("Source", ""),
+                        "Destination": row.get("Destination", ""),
+                        "Status": "moved",
+                    })
+                else:
+                    rows.append({
+                        "BatchId": row.get("BatchId", "legacy"),
+                        "Date": row.get("Date", ""),
+                        "Source": row.get("Source", ""),
+                        "Destination": row.get("Destination", ""),
+                        "Status": row.get("Status", "moved"),
+                    })
+            return rows
+
+    def _write_log(self, rows: list[dict]):
+        """Write the full log back in the current schema."""
+        with open(self.log_file, 'w', newline='', encoding='utf-8') as f:
+            writer = csv.DictWriter(f, fieldnames=self.LOG_HEADER)
+            writer.writeheader()
+            for row in rows:
+                writer.writerow({k: row.get(k, "") for k in self.LOG_HEADER})
+
+    def _new_batch_id(self) -> str:
+        """Generate a unique batch id for one organize operation."""
+        return datetime.now().strftime("%Y%m%d%H%M%S%f")
+
     def organize_files(self, files: list[dict]) -> dict:
         """Move files to their designated categories, optionally renaming them."""
+        batch_id = self._new_batch_id()
         results = {
             "success": [],
             "skipped": [],
-            "errors": []
+            "errors": [],
+            "batch_id": batch_id,
         }
-        
-        # Initialize log file
-        if not self.log_file.exists():
-            with open(self.log_file, 'w', newline='', encoding='utf-8') as f:
-                writer = csv.writer(f)
-                writer.writerow(["Date", "Source", "Destination"])
-        
+
+        # Read existing log (migrates legacy format in memory) and append new rows.
+        log_rows = self._read_log()
+
         for file in files:
             if file.get("action") == "skip":
                 results["skipped"].append(file["name"])
                 continue
-            
+
             source = Path(file["path"])
             category = self._sanitize_folder_name(file.get("category", "Misc"))
             target_folder = self.target_dir / category
-            
+
             # Use new_name if provided, otherwise keep original name
             final_name = file.get("new_name") or file["name"]
             final_name = self._sanitize_filename(final_name)
             destination = target_folder / final_name
-            
+
             try:
                 # Create folder if needed
                 target_folder.mkdir(exist_ok=True)
-                
+
                 # Handle collision
                 destination = self._get_unique_path(destination)
-                
+
                 # Move file (and rename if new_name was provided)
                 shutil.move(str(source), str(destination))
-                
-                # Log operation
-                with open(self.log_file, 'a', newline='', encoding='utf-8') as f:
-                    writer = csv.writer(f)
-                    writer.writerow([datetime.now().isoformat(), str(source), str(destination)])
-                
+
+                # Record operation
+                log_rows.append({
+                    "BatchId": batch_id,
+                    "Date": datetime.now().isoformat(),
+                    "Source": str(source),
+                    "Destination": str(destination),
+                    "Status": "moved",
+                })
+
                 result_entry = {
                     "name": file["name"],
                     "category": category,
@@ -289,16 +342,129 @@ class FileOrganizer:
                 }
                 if file.get("new_name"):
                     result_entry["renamed_to"] = final_name
-                    
+
                 results["success"].append(result_entry)
-                
+
             except Exception as e:
                 results["errors"].append({
                     "name": file["name"],
                     "error": str(e)
                 })
-        
+
+        # Persist the log (rewrites in current schema, migrating legacy rows).
+        self._write_log(log_rows)
+
         return results
+
+    def get_history(self) -> list[dict]:
+        """Return organization history grouped by batch, newest batch first."""
+        rows = self._read_log()
+        if not rows:
+            return []
+
+        batches = {}
+        order = []
+        for row in rows:
+            bid = row["BatchId"]
+            if bid not in batches:
+                batches[bid] = {
+                    "batch_id": bid,
+                    "date": row["Date"],
+                    "operations": [],
+                }
+                order.append(bid)
+            batches[bid]["operations"].append({
+                "source": row["Source"],
+                "destination": row["Destination"],
+                "name": Path(row["Destination"]).name,
+                "status": row["Status"],
+            })
+
+        result = []
+        for bid in order:
+            batch = batches[bid]
+            ops = batch["operations"]
+            batch["count"] = len(ops)
+            batch["undone_count"] = sum(1 for o in ops if o["status"] == "undone")
+            result.append(batch)
+
+        # Newest first
+        result.reverse()
+        return result
+
+    def undo_operations(self, destinations: list[str]) -> dict:
+        """Undo specific operations identified by their destination paths.
+
+        Moves each file back to its original source, marks the matching log row
+        'undone', and removes folders left empty. Does not overwrite an existing
+        file at the original source.
+        """
+        results = {
+            "restored": [],
+            "errors": [],
+            "folders_removed": [],
+        }
+
+        if not self.log_file or not self.log_file.exists():
+            return {"error": "No log file found"}
+
+        rows = self._read_log()
+        if not rows:
+            return {"error": "No operations to undo"}
+
+        targets = set(destinations)
+        folders_to_check = set()
+
+        for row in rows:
+            if row["Destination"] not in targets or row["Status"] != "moved":
+                continue
+
+            source = Path(row["Source"])
+            destination = Path(row["Destination"])
+
+            if not destination.exists():
+                results["errors"].append(f"File not found: {destination}")
+                continue
+
+            if source.exists():
+                results["errors"].append(
+                    f"Cannot restore {destination.name}: '{source}' already exists"
+                )
+                continue
+
+            try:
+                source.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(str(destination), str(source))
+                row["Status"] = "undone"
+                results["restored"].append(source.name)
+                folders_to_check.add(destination.parent)
+            except Exception as e:
+                results["errors"].append(f"Failed to restore {destination.name}: {e}")
+
+        # Remove empty folders left behind
+        for folder in folders_to_check:
+            if folder.exists() and folder != self.target_dir and not any(folder.iterdir()):
+                try:
+                    folder.rmdir()
+                    results["folders_removed"].append(folder.name)
+                except Exception:
+                    pass
+
+        # Persist updated statuses
+        self._write_log(rows)
+
+        return results
+
+    def undo_batch(self, batch_id: str) -> dict:
+        """Undo all still-active operations in a given batch."""
+        rows = self._read_log()
+        destinations = [
+            r["Destination"] for r in rows
+            if r["BatchId"] == batch_id and r["Status"] == "moved"
+        ]
+        if not destinations:
+            return {"error": "No operations to undo in this batch"}
+        return self.undo_operations(destinations)
     
     def _sanitize_filename(self, name: str) -> str:
         """Remove invalid characters from filename."""
@@ -308,58 +474,13 @@ class FileOrganizer:
         return name.strip() or "unnamed"
     
     def undo_organization(self) -> dict:
-        """Undo the last organization by reading the log."""
-        results = {
-            "restored": [],
-            "errors": [],
-            "folders_removed": []
-        }
-        
-        if not self.log_file or not self.log_file.exists():
-            return {"error": "No log file found"}
-        
-        # Read log
-        operations = []
-        with open(self.log_file, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f)
-            operations = list(reader)
-        
-        if not operations:
-            return {"error": "No operations to undo"}
-        
-        folders_to_check = set()
-        
-        for op in operations:
-            source = Path(op["Source"])
-            destination = Path(op["Destination"])
-            
-            if not destination.exists():
-                results["errors"].append(f"File not found: {destination}")
-                continue
-            
-            try:
-                # Move back
-                shutil.move(str(destination), str(source))
-                results["restored"].append(source.name)
-                folders_to_check.add(destination.parent)
-            except Exception as e:
-                results["errors"].append(f"Failed to restore {destination.name}: {e}")
-        
-        # Remove empty folders
-        for folder in folders_to_check:
-            if folder.exists() and not any(folder.iterdir()):
-                try:
-                    folder.rmdir()
-                    results["folders_removed"].append(folder.name)
-                except:
-                    pass
-        
-        # Clear log
-        with open(self.log_file, 'w', newline='', encoding='utf-8') as f:
-            writer = csv.writer(f)
-            writer.writerow(["Date", "Source", "Destination"])
-        
-        return results
+        """Undo the most recent active batch of operations."""
+        history = self.get_history()
+        # get_history is newest-first; find the first batch with active operations
+        for batch in history:
+            if batch["count"] - batch["undone_count"] > 0:
+                return self.undo_batch(batch["batch_id"])
+        return {"error": "No operations to undo"}
     
     def _sanitize_folder_name(self, name: str) -> str:
         """Remove invalid characters from folder name."""

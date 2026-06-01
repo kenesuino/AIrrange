@@ -91,6 +91,44 @@ def undo_organization():
         return jsonify({"success": False, "error": str(e)})
 
 
+@app.route('/api/history', methods=['GET'])
+def get_history():
+    """Get the organization history grouped by batch."""
+    try:
+        if not organizer.target_dir:
+            organizer.set_target_directory(DEFAULT_DIR)
+        batches = organizer.get_history()
+        return jsonify({"success": True, "batches": batches})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route('/api/undo-operation', methods=['POST'])
+def undo_operation():
+    """Undo specific operations identified by their destination paths."""
+    data = request.get_json()
+    destinations = data.get('destinations', [])
+
+    try:
+        results = organizer.undo_operations(destinations)
+        return jsonify({"success": True, "results": results})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
+@app.route('/api/undo-batch', methods=['POST'])
+def undo_batch():
+    """Undo all active operations in a batch."""
+    data = request.get_json()
+    batch_id = data.get('batch_id')
+
+    try:
+        results = organizer.undo_batch(batch_id)
+        return jsonify({"success": True, "results": results})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)})
+
+
 @app.route('/api/chat', methods=['POST'])
 def chat_with_ai():
     """Chat with AI about file organization."""

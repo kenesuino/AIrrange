@@ -43,7 +43,70 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s ease;
     --transition-slow: 0.4s ease;
+
+    /* Icon sizing */
+    --icon-size: 1.05em;
 }
+
+/* ============================================
+   Light Theme Overrides
+   ============================================ */
+:root[data-theme="light"] {
+    --bg-primary: #f4f5f8;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #eceef3;
+    --bg-card: rgba(255, 255, 255, 0.85);
+    --bg-hover: rgba(99, 102, 241, 0.06);
+
+    --text-primary: #1a1c25;
+    --text-secondary: #50546a;
+    --text-muted: #8b8fa3;
+
+    --border-color: rgba(20, 20, 40, 0.10);
+    --border-glow: rgba(99, 102, 241, 0.25);
+
+    --shadow-sm: 0 2px 8px rgba(20, 20, 40, 0.06);
+    --shadow-md: 0 4px 16px rgba(20, 20, 40, 0.08);
+    --shadow-lg: 0 8px 32px rgba(20, 20, 40, 0.12);
+    --shadow-glow: 0 0 30px rgba(99, 102, 241, 0.10);
+}
+
+:root[data-theme="light"] body {
+    background-image:
+        radial-gradient(ellipse at 20% 20%, rgba(99, 102, 241, 0.10) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 80%, rgba(139, 92, 246, 0.08) 0%, transparent 50%);
+}
+
+/* ============================================
+   SVG Icons
+   ============================================ */
+.icon {
+    width: var(--icon-size);
+    height: var(--icon-size);
+    flex-shrink: 0;
+    vertical-align: -0.15em;
+    stroke: currentColor;
+    fill: none;
+}
+
+.logo-icon .icon {
+    width: 2rem;
+    height: 2rem;
+    color: var(--accent-primary);
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.4));
+}
+
+/* File-type icon colors */
+.type-icon .icon { width: 1.25rem; height: 1.25rem; }
+.type-folder { color: #f5b942; }
+.type-image { color: #34d399; }
+.type-audio { color: #f472b6; }
+.type-video { color: #60a5fa; }
+.type-archive { color: #fbbf24; }
+.type-code { color: #a78bfa; }
+.type-executable { color: #f87171; }
+.type-document { color: #93c5fd; }
+.type-generic { color: var(--text-secondary); }
 
 /* ============================================
    Base Styles
@@ -1230,6 +1293,286 @@ body {
 }
 
 /* ============================================
+   Tabbed Panel (Preview / History)
+   ============================================ */
+.tabbed-panel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    max-height: 320px;
+    overflow: hidden;
+}
+
+.panel-tabs {
+    gap: 0.25rem;
+    padding: 0.5rem 0.75rem;
+}
+
+.panel-tab {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 0.9rem;
+    background: transparent;
+    border: none;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    font-weight: 500;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.panel-tab:hover {
+    background: var(--bg-hover);
+    color: var(--text-primary);
+}
+
+.panel-tab.active {
+    background: var(--accent-primary);
+    color: #fff;
+}
+
+.tab-action {
+    margin-left: auto;
+    padding: 0.4rem;
+    font-size: 1rem;
+}
+
+.tab-action.hidden {
+    display: none;
+}
+
+.tab-content {
+    display: none;
+    overflow-y: auto;
+    flex: 1;
+    scrollbar-width: thin;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+/* ============================================
+   Operation History
+   ============================================ */
+.history-list {
+    padding: 0.75rem 1rem;
+}
+
+.history-batch {
+    margin-bottom: 1rem;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    background: var(--bg-secondary);
+}
+
+.history-batch-header {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.55rem 0.75rem;
+    background: var(--bg-tertiary);
+    border-bottom: 1px solid var(--border-color);
+    font-size: 0.78rem;
+}
+
+.history-batch-date {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.history-batch-count {
+    color: var(--text-muted);
+}
+
+.history-undo-all {
+    margin-left: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.3rem 0.6rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--warning);
+    font-size: 0.72rem;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.history-undo-all:hover {
+    background: rgba(245, 158, 11, 0.12);
+    border-color: var(--warning);
+}
+
+.history-undo-all .icon {
+    width: 0.9rem;
+    height: 0.9rem;
+}
+
+.history-ops {
+    padding: 0.25rem 0.5rem;
+}
+
+.history-op {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.4rem 0.4rem;
+    font-size: 0.8rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.history-op:last-child {
+    border-bottom: none;
+}
+
+.history-op.undone {
+    opacity: 0.55;
+}
+
+.history-op-name {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-width: 0;
+    color: var(--text-primary);
+}
+
+.history-op-name > span,
+.history-op-name {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-arrow {
+    width: 0.85rem;
+    height: 0.85rem;
+    color: var(--accent-primary);
+    flex-shrink: 0;
+}
+
+.history-dest {
+    color: var(--text-secondary);
+}
+
+.history-undo-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.3rem;
+    background: transparent;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-sm);
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    flex-shrink: 0;
+}
+
+.history-undo-btn:hover {
+    color: var(--warning);
+    border-color: var(--warning);
+    background: rgba(245, 158, 11, 0.12);
+}
+
+.history-undo-btn .icon {
+    width: 0.95rem;
+    height: 0.95rem;
+}
+
+.history-badge {
+    flex-shrink: 0;
+    font-size: 0.68rem;
+    padding: 0.15rem 0.5rem;
+    border-radius: 20px;
+    background: var(--bg-tertiary);
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+/* ============================================
+   Toast Notifications
+   ============================================ */
+.toast-container {
+    position: fixed;
+    bottom: 1.5rem;
+    right: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    z-index: 2000;
+    pointer-events: none;
+}
+
+.toast {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 220px;
+    max-width: 360px;
+    padding: 0.8rem 1rem;
+    background: var(--bg-card);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-color);
+    border-left: 3px solid var(--accent-primary);
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-lg);
+    color: var(--text-primary);
+    font-size: 0.85rem;
+    opacity: 0;
+    transform: translateX(20px);
+    transition: opacity var(--transition-normal), transform var(--transition-normal);
+    pointer-events: auto;
+}
+
+.toast.show {
+    opacity: 1;
+    transform: translateX(0);
+}
+
+.toast-success {
+    border-left-color: var(--success);
+}
+
+.toast-success .icon {
+    color: var(--success);
+}
+
+.toast-error {
+    border-left-color: var(--danger);
+}
+
+.toast-error .icon {
+    color: var(--danger);
+}
+
+.toast-info .icon {
+    color: var(--info);
+}
+
+/* ============================================
+   Confirm Dialog
+   ============================================ */
+.confirm-modal {
+    max-width: 420px;
+}
+
+.confirm-modal .modal-body {
+    color: var(--text-secondary);
+    line-height: 1.6;
+}
+
+/* ============================================
    Responsive Design
    ============================================ */
 @media (max-width: 1200px) {
@@ -1244,9 +1587,9 @@ body {
     }
 
     .ai-panel,
-    .preview-panel {
+    .tabbed-panel {
         flex: 1;
-        max-height: 350px;
+        max-height: 360px;
     }
 }
 

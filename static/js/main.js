@@ -58,6 +58,24 @@ const folderSuggestions = document.getElementById('folder-suggestions');
 // DOM Elements - Preview
 const previewTree = document.getElementById('preview-tree');
 
+// DOM Elements - Tabs & History
+const panelTabs = document.querySelectorAll('.panel-tab');
+const tabContents = document.querySelectorAll('.tab-content');
+const historyList = document.getElementById('history-list');
+const btnRefreshHistory = document.getElementById('btn-refresh-history');
+
+// DOM Elements - Theme
+const btnTheme = document.getElementById('btn-theme');
+
+// DOM Elements - Toast & Confirm
+const toastContainer = document.getElementById('toast-container');
+const confirmModal = document.getElementById('confirm-modal');
+const confirmTitle = document.getElementById('confirm-title');
+const confirmBody = document.getElementById('confirm-body');
+const confirmOk = document.getElementById('confirm-ok');
+const confirmCancel = document.getElementById('confirm-cancel');
+const confirmClose = document.getElementById('confirm-close');
+
 // DOM Elements - Settings
 const btnSettings = document.getElementById('btn-settings');
 const settingsModal = document.getElementById('settings-modal');
@@ -76,6 +94,9 @@ const connectionStatus = document.getElementById('connection-status');
 
 // Initialize
 document.addEventListener('DOMContentLoaded', async () => {
+    // Apply saved theme before anything renders
+    initTheme();
+
     // Load settings and providers
     await loadSettings();
     await loadProviders();
@@ -141,7 +162,100 @@ document.addEventListener('DOMContentLoaded', async () => {
             optIncludeFolders.disabled = false;
         }
     });
+
+    // Event listeners - Theme
+    btnTheme.addEventListener('click', toggleTheme);
+
+    // Event listeners - Panel tabs
+    panelTabs.forEach(tab => {
+        tab.addEventListener('click', () => switchPanelTab(tab.dataset.tab));
+    });
+    btnRefreshHistory.addEventListener('click', loadHistory);
+
+    // Event listeners - Confirm dialog
+    confirmCancel.addEventListener('click', () => resolveConfirm(false));
+    confirmClose.addEventListener('click', () => resolveConfirm(false));
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) resolveConfirm(false);
+    });
 });
+
+// ============================================
+//   Theme
+// ============================================
+const SUN_ICON = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>';
+const MOON_ICON = '<svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>';
+
+function applyTheme(theme) {
+    document.documentElement.dataset.theme = theme;
+    // Show the icon for the theme you can switch TO
+    btnTheme.innerHTML = theme === 'dark' ? SUN_ICON : MOON_ICON;
+}
+
+function initTheme() {
+    const saved = localStorage.getItem('theme') || 'dark';
+    applyTheme(saved);
+}
+
+function toggleTheme() {
+    const current = document.documentElement.dataset.theme || 'dark';
+    const next = current === 'dark' ? 'light' : 'dark';
+    localStorage.setItem('theme', next);
+    applyTheme(next);
+}
+
+// ============================================
+//   Panel tabs
+// ============================================
+function switchPanelTab(name) {
+    panelTabs.forEach(t => t.classList.toggle('active', t.dataset.tab === name));
+    tabContents.forEach(c => c.classList.toggle('active', c.id === `tab-${name}`));
+    btnRefreshHistory.classList.toggle('hidden', name !== 'history');
+    if (name === 'history') loadHistory();
+}
+
+// ============================================
+//   Toast notifications
+// ============================================
+function showToast(message, type = 'info', timeout = 3500) {
+    const toast = document.createElement('div');
+    toast.className = `toast toast-${type}`;
+    const iconName = type === 'success' ? 'sparkles' : type === 'error' ? 'info' : 'info';
+    toast.innerHTML = `${icon(iconName)}<span>${message}</span>`;
+    toastContainer.appendChild(toast);
+    // Trigger enter animation
+    requestAnimationFrame(() => toast.classList.add('show'));
+    setTimeout(() => {
+        toast.classList.remove('show');
+        setTimeout(() => toast.remove(), 250);
+    }, timeout);
+}
+
+// ============================================
+//   Confirm dialog (promise-based)
+// ============================================
+let confirmResolver = null;
+
+function confirmDialog(message, { title = 'Confirm', okLabel = 'Confirm', danger = false } = {}) {
+    confirmTitle.textContent = title;
+    confirmBody.textContent = message;
+    confirmOk.textContent = okLabel;
+    confirmOk.className = danger ? 'btn btn-warning' : 'btn btn-primary';
+    confirmModal.classList.remove('hidden');
+
+    return new Promise((resolve) => {
+        confirmResolver = resolve;
+        confirmOk.onclick = () => resolveConfirm(true);
+    });
+}
+
+function resolveConfirm(value) {
+    confirmModal.classList.add('hidden');
+    if (confirmResolver) {
+        confirmResolver(value);
+        confirmResolver = null;
+    }
+}
 
 // Settings Functions
 async function loadSettings() {
@@ -289,7 +403,7 @@ function onApiKeyInput() {
 function toggleApiKeyVisibility() {
     const isPassword = apiKeyInput.type === 'password';
     apiKeyInput.type = isPassword ? 'text' : 'password';
-    btnToggleKey.textContent = isPassword ? '🔒' : '👁️';
+    btnToggleKey.innerHTML = icon(isPassword ? 'eyeOff' : 'eye');
 }
 
 async function testConnection() {
@@ -416,23 +530,35 @@ function formatSize(bytes) {
     return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
 }
 
-// Utility: Get file icon
+// Utility: Get file icon (returns inline SVG markup keyed by file category)
 function getFileIcon(extension, isFolder = false) {
-    if (isFolder) return '📁';
-    const icons = {
-        '.pdf': '📄',
-        '.doc': '📝', '.docx': '📝',
-        '.xls': '📊', '.xlsx': '📊',
-        '.ppt': '📽️', '.pptx': '📽️',
-        '.jpg': '🖼️', '.jpeg': '🖼️', '.png': '🖼️', '.gif': '🖼️', '.webp': '🖼️',
-        '.mp3': '🎵', '.wav': '🎵', '.flac': '🎵',
-        '.mp4': '🎬', '.mkv': '🎬', '.avi': '🎬',
-        '.zip': '📦', '.rar': '📦', '.7z': '📦',
-        '.exe': '⚙️', '.msi': '⚙️',
-        '.py': '🐍', '.js': '📜', '.html': '🌐', '.css': '🎨',
-        '.txt': '📃',
+    if (isFolder) return icon('folder', 'type-folder');
+
+    const ext = (extension || '').toLowerCase();
+    const categories = {
+        document: ['.pdf', '.doc', '.docx', '.txt', '.rtf', '.odt', '.xls', '.xlsx', '.ppt', '.pptx', '.csv', '.md'],
+        image: ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg', '.tiff', '.heic'],
+        audio: ['.mp3', '.wav', '.flac', '.aac', '.ogg', '.m4a'],
+        video: ['.mp4', '.mkv', '.avi', '.mov', '.wmv', '.webm', '.flv'],
+        archive: ['.zip', '.rar', '.7z', '.tar', '.gz', '.bz2'],
+        executable: ['.exe', '.msi', '.bat', '.app', '.deb', '.dmg'],
+        code: ['.py', '.js', '.ts', '.html', '.css', '.json', '.java', '.c', '.cpp', '.go', '.rs', '.rb', '.php', '.sh'],
     };
-    return icons[(extension || '').toLowerCase()] || '📄';
+
+    const iconNames = {
+        document: 'fileText',
+        image: 'image',
+        audio: 'audio',
+        video: 'video',
+        archive: 'archive',
+        executable: 'executable',
+        code: 'code',
+    };
+
+    for (const [cat, exts] of Object.entries(categories)) {
+        if (exts.includes(ext)) return icon(iconNames[cat], `type-${cat}`);
+    }
+    return icon('file', 'type-generic');
 }
 
 // Show status
@@ -618,7 +744,7 @@ function checkActionButtons() {
 async function scanFiles() {
     const directory = directoryInput.value.trim();
     if (!directory) {
-        alert('Please enter a directory path');
+        showToast('Please enter a directory path', 'error');
         return;
     }
 
@@ -739,6 +865,7 @@ async function getSuggestions() {
 
 // Show preview
 function showPreview() {
+    switchPanelTab('preview');
     const allItems = files.concat(folders);
     const toMove = allItems.filter(f => f.action === 'move' && f.category);
 
@@ -793,13 +920,15 @@ async function organizeFiles() {
     const toMove = allItems.filter(f => f.action === 'move' && f.category);
 
     if (toMove.length === 0) {
-        alert('No items selected for organization');
+        showToast('No items selected for organization', 'error');
         return;
     }
 
-    if (!confirm(`Move ${toMove.length} items to their destinations?`)) {
-        return;
-    }
+    const confirmed = await confirmDialog(
+        `Move ${toMove.length} item${toMove.length === 1 ? '' : 's'} to their destinations?`,
+        { title: 'Organize Files', okLabel: 'Organize' }
+    );
+    if (!confirmed) return;
 
     showStatus('Organizing files...', 'loading');
     btnOrganize.disabled = true;
@@ -817,6 +946,7 @@ async function organizeFiles() {
             showResults('Organization Complete', data.results);
             addChatMessage('assistant', `✨ **Organization Complete!**\n\n- ✅ ${data.results.success?.length || 0} items moved successfully\n- ⏭️ ${data.results.skipped?.length || 0} items skipped\n- ❌ ${data.results.errors?.length || 0} errors`);
             await scanFiles();
+            await loadHistory();
         } else {
             showStatus(`Error: ${data.error}`, 'error');
         }
@@ -827,11 +957,13 @@ async function organizeFiles() {
     }
 }
 
-// API: Undo organization
+// API: Undo most recent batch (header Undo button)
 async function undoOrganization() {
-    if (!confirm('Undo the last organization? Items will be moved back.')) {
-        return;
-    }
+    const confirmed = await confirmDialog(
+        'Undo the most recent organization batch? Those items will be moved back.',
+        { title: 'Undo Last Batch', okLabel: 'Undo', danger: true }
+    );
+    if (!confirmed) return;
 
     showStatus('Undoing organization...', 'loading');
     btnUndo.disabled = true;
@@ -845,19 +977,7 @@ async function undoOrganization() {
         const data = await response.json();
 
         if (data.success) {
-            const results = data.results;
-            if (results.error) {
-                showStatus(results.error, 'error');
-                addChatMessage('assistant', `⚠️ ${results.error}`);
-            } else {
-                showResults('Undo Complete', {
-                    success: results.restored.map(name => ({ name })),
-                    errors: results.errors.map(e => ({ name: e, error: '' })),
-                    skipped: []
-                });
-                addChatMessage('assistant', `↩️ **Undo Complete!**\n\n- ${results.restored.length} items restored\n- ${results.folders_removed?.length || 0} empty folders removed`);
-                await scanFiles();
-            }
+            await handleUndoResults(data.results);
         } else {
             showStatus(`Error: ${data.error}`, 'error');
         }
@@ -866,6 +986,169 @@ async function undoOrganization() {
     } finally {
         btnUndo.disabled = false;
     }
+}
+
+// Shared handler for undo responses (last-batch, per-batch, per-operation)
+async function handleUndoResults(results) {
+    if (results.error) {
+        showStatus(results.error, 'error');
+        showToast(results.error, 'error');
+        addChatMessage('assistant', `⚠️ ${results.error}`);
+        return;
+    }
+
+    const restored = results.restored?.length || 0;
+    const removed = results.folders_removed?.length || 0;
+    const errors = results.errors?.length || 0;
+
+    showToast(`Restored ${restored} item${restored === 1 ? '' : 's'}`,
+        errors ? 'error' : 'success');
+    addChatMessage('assistant', `↩️ **Undo Complete!**\n\n- ${restored} items restored\n- ${removed} empty folders removed${errors ? `\n- ⚠️ ${errors} errors` : ''}`);
+
+    if (errors) {
+        showResults('Undo Results', {
+            success: results.restored.map(name => ({ name })),
+            errors: results.errors.map(e => ({ name: e, error: '' })),
+            skipped: []
+        });
+    }
+
+    await scanFiles();
+    await loadHistory();
+}
+
+// ============================================
+//   Operation History
+// ============================================
+async function loadHistory() {
+    try {
+        const response = await fetch('/api/history');
+        const data = await response.json();
+        if (data.success) {
+            renderHistory(data.batches || []);
+        } else {
+            historyList.innerHTML = `<p class="preview-hint">Error loading history: ${data.error}</p>`;
+        }
+    } catch (e) {
+        historyList.innerHTML = `<p class="preview-hint">Error loading history: ${e.message}</p>`;
+    }
+}
+
+function formatBatchDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d)) return iso;
+    return d.toLocaleString(undefined, {
+        month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
+    });
+}
+
+function renderHistory(batches) {
+    if (!batches.length) {
+        historyList.innerHTML = '<p class="preview-hint">No organization history yet</p>';
+        return;
+    }
+
+    historyList.innerHTML = batches.map(batch => {
+        const active = batch.count - batch.undone_count;
+        const opsHtml = batch.operations.map(op => {
+            const destFolder = folderFromPath(op.destination);
+            const undone = op.status === 'undone';
+            return `
+                <div class="history-op ${undone ? 'undone' : ''}">
+                    <span class="history-op-name" title="${escapeAttr(op.name)} → ${escapeAttr(destFolder)}">
+                        ${escapeHtml(op.name)}
+                        ${icon('arrowRight', 'history-arrow')}
+                        <span class="history-dest">${escapeHtml(destFolder)}</span>
+                    </span>
+                    ${undone
+                        ? '<span class="history-badge">undone</span>'
+                        : `<button class="history-undo-btn" title="Undo this move"
+                              onclick="undoOperation('${escapeJs(op.destination)}')">
+                              ${icon('undo')}
+                           </button>`}
+                </div>`;
+        }).join('');
+
+        return `
+            <div class="history-batch">
+                <div class="history-batch-header">
+                    <span class="history-batch-date">${formatBatchDate(batch.date)}</span>
+                    <span class="history-batch-count">${active}/${batch.count} active</span>
+                    ${active > 0
+                        ? `<button class="history-undo-all" onclick="undoBatch('${escapeJs(batch.batch_id)}')">
+                              ${icon('undo')} Undo all
+                           </button>`
+                        : '<span class="history-badge">all undone</span>'}
+                </div>
+                <div class="history-ops">${opsHtml}</div>
+            </div>`;
+    }).join('');
+}
+
+async function undoOperation(destination) {
+    showStatus('Undoing operation...', 'loading');
+    try {
+        const response = await fetch('/api/undo-operation', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ destinations: [destination] })
+        });
+        const data = await response.json();
+        if (data.success) {
+            await handleUndoResults(data.results);
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast(`Error: ${e.message}`, 'error');
+    }
+}
+
+async function undoBatch(batchId) {
+    const confirmed = await confirmDialog(
+        'Undo all remaining moves in this batch?',
+        { title: 'Undo Batch', okLabel: 'Undo all', danger: true }
+    );
+    if (!confirmed) return;
+
+    showStatus('Undoing batch...', 'loading');
+    try {
+        const response = await fetch('/api/undo-batch', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ batch_id: batchId })
+        });
+        const data = await response.json();
+        if (data.success) {
+            await handleUndoResults(data.results);
+        } else {
+            showToast(`Error: ${data.error}`, 'error');
+        }
+    } catch (e) {
+        showToast(`Error: ${e.message}`, 'error');
+    }
+}
+
+// Helpers for history rendering
+function folderFromPath(p) {
+    if (!p) return '';
+    const parts = p.replace(/\\/g, '/').split('/').filter(Boolean);
+    return parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || p);
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, c => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+}
+
+function escapeAttr(s) {
+    return escapeHtml(s);
+}
+
+function escapeJs(s) {
+    return String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
 }
 
 // Chat functions
